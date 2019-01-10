@@ -6,9 +6,13 @@ use Arrilot\BitrixSystemCheck\Checks\Check;
 use Arrilot\BitrixSystemCheck\CommonChecksRepository;
 use Arrilot\BitrixSystemCheck\Exceptions\FailCheckException;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
+use Arrilot\BitrixSystemCheck\Monitorings\Monitoring;
 use Bitrix\Main\Config\Configuration;
 use Exception;
+use Psr\Log\LoggerInterface;
+use Psr\Log\Test\LoggerInterfaceTest;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -39,11 +43,11 @@ class SystemCheckCommand extends Command
     protected $skips = [];
     
     /**
-     * Bitrix config for this package.
+     * Monitoring object.
      *
-     * @var array
+     * @var LoggerInterface|null
      */
-    protected $config;
+    protected $logger;
     
     /**
      * Configures the current command.
@@ -51,7 +55,8 @@ class SystemCheckCommand extends Command
     protected function configure()
     {
         $this->setName('system:check')
-            ->setDescription('Check system configuration issues');
+            ->setDescription('Run a specific system monitoring')
+            ->addArgument('monitoring', InputArgument::REQUIRED, 'Monitoring name');
     }
     
     /**
@@ -66,10 +71,21 @@ class SystemCheckCommand extends Command
     {
         $this->input = $input;
         $this->output = $output;
-        $this->config = Configuration::getInstance()->get('bitrix-systemcheck');
-        $env = !empty($this->config['env']) ? $this->config['env'] : 'local';
-        $this->runChecks($this->getCommonChecks(), 'Запуск общих проверок');
-        $this->runChecks($this->getCustomChecks(), 'Запуск проверок для окружения ('. $env . ')');
+        
+        $config = Configuration::getInstance()->get('bitrix-systemcheck');
+        $monitoringName = $input->getArgument('monitoring');
+        if (!isset($config['monitorings'][$monitoringName])) {
+            $this->output->writeln('<fg=red>Мониторинг '.$monitoringName.' не найден</fg=red>');
+            return 1;
+        }
+        /** @var Monitoring $monitoring */
+        $monitoring = new $config['monitorings'][$monitoringName];
+        $this->logger = $monitoring->logger();
+        $title = !empty($config['env'])
+            ? 'Запуск проверок мониторинга '.$monitoringName.' для окружения '. $config['env'] . ''
+            : 'Запуск проверок мониторинга '.$monitoringName.'';
+
+        $this->runChecks($monitoring->checks(), $title);
     
         if (count($this->skips) && $this->output->isVerbose()) {
             $this->output->writeln('<fg=yellow>Журнал пропуска проверок:</fg=yellow>');
@@ -80,18 +96,23 @@ class SystemCheckCommand extends Command
         }
     
         if (count($this->errors)) {
-            $this->error('Журнал ошибок:');
-            $this->output->writeln('');
             foreach ($this->errors as $message) {
                 $this->output->writeln('<fg=red>'.$message.'</fg=red>');
             }
+    
+            $this->output->writeln('');
+    
+            $this->output->writeln('<error>Некоторые проверки завершились ошибками</error>');
+    
+            $this->raiseAlert();
             return 1;
         }
-        $this->info('Все проверки успешно пройдены.');
+
+        $this->info('Все проверки успешно пройдены');
         return 0;
     }
     
-    protected function runChecks(array $checks, string $title)
+    protected function runChecks(array $checks, $title)
     {
         $max = count($checks);
         if ($max === 0) {
@@ -108,24 +129,7 @@ class SystemCheckCommand extends Command
         }
         $this->output->writeln('');
     }
-    
-    private function getCommonChecks()
-    {
-        $repository = new CommonChecksRepository();
-        $checksNames = array_filter($repository->getChecks(), function($checkName) {
-            return !in_array($checkName, $this->config['skipCommonChecks']);
-        });
 
-        return array_map(function($checkName) {
-            return new $checkName($this->config);
-        }, $checksNames);
-    }
-    
-    private function getCustomChecks()
-    {
-        return [];
-    }
-    
     protected function runCheck(Check $check)
     {
         try {
@@ -169,5 +173,16 @@ class SystemCheckCommand extends Command
     protected function info($message)
     {
         $this->output->writeln("<info>{$message}</info>");
+        if ($this->logger) {
+            $this->logger->info($message);
+        }
+    }
+    
+    protected function raiseAlert()
+    {
+        if ($this->logger) {
+            $message = implode(PHP_EOL, $this->errors);
+            $this->logger->alert($message);
+        }
     }
 }

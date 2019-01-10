@@ -10,7 +10,7 @@ class PhpSettings extends Check
     /**
      * @return boolean
      */
-    function run()
+    public function run()
     {
         $result = true;
         $minVersion = '5.3.0';
@@ -100,7 +100,7 @@ class PhpSettings extends Check
     /**
      * @return string
      */
-    function getName()
+    public function getName()
     {
         return "Корректность необходимых Битриксу настроек php...";
     }

@@ -9,19 +9,16 @@ class WwwRedirect extends Check
     /**
      * @return string
      */
-    function getName()
+    public function getName()
     {
-        return "Проверка содержимого редиректа с www на без www...";
+        return "Проверка редиректа с www на без www...";
     }
 
     /**
      * @return boolean
      */
-    function run()
+    public function run()
     {
-        if (!in_production()) {
-            $this->skip('проверка проводится только для production');
-        }
 
         // TODO
         return true;

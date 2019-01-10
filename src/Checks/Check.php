@@ -2,7 +2,6 @@
 
 namespace Arrilot\BitrixSystemCheck\Checks;
 
-use Arrilot\BitrixSystemCheck\Checks\Custom\RobotsTxt;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
 
 abstract class Check
@@ -10,17 +9,7 @@ abstract class Check
     /**
      * @var array
      */
-    protected $packageConfig;
-    
-    /**
-     * @var array
-     */
     protected $errorMessages = [];
-    
-    public function __construct($config)
-    {
-        $this->packageConfig = $config;
-    }
 
     /**
      * @return boolean
@@ -35,7 +24,7 @@ abstract class Check
     /**
      * @return array
      */
-    function getMessages()
+    public function getMessages()
     {
         return $this->errorMessages;
     }
@@ -57,30 +46,5 @@ abstract class Check
     protected function skip($message)
     {
         throw new SkipCheckException(get_class($this) . ': '. $message);
-    }
-    
-    /**
-     * Check options existence in bitrix config for package and skip check if they are missing
-     * @param array $options
-     */
-    protected function skipIfMissingConfigOptions(array $options)
-    {
-        foreach ($options as $option) {
-            if (!isset($this->packageConfig[$option])) {
-                $this->skip('не заполнено поле bitrix-systemcheck.' . $option . ' в .settings_extra.php');
-            }
-        }
-    }
-
-    /**
-     * Is app in production.
-     *
-     * @return bool
-     */
-    protected function inProduction()
-    {
-        $this->skipIfMissingConfigOptions(['env']);
-
-        return in_array($this->packageConfig['env'], ['production', 'prod']);
     }
 }

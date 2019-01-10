@@ -7,12 +7,40 @@ use Arrilot\BitrixSystemCheck\Checks\Check;
 class RobotsTxt extends Check
 {
     /**
+     * @var string
+     */
+    protected $domain;
+    
+    /**
+     * @var string|null
+     */
+    protected $basicAuth;
+
+    /**
+     * @var bool
+     */
+    private $inProduction;
+    
+    public function __construct($domain, $inProduction ,$basicAuth = null)
+    {
+        $this->domain = $domain;
+        $this->inProduction = $inProduction;
+        $this->basicAuth = $basicAuth;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return "Проверка содержимого robots.txt...";
+    }
+
+    /**
      * @return boolean
      */
-    function run()
+    public function run()
     {
-        $this->skipIfMissingConfigOptions(['domain']);
-
         $content = $this->getRobotsContent();
         if (empty($content)) {
             $this->logError('robots.txt пуст либо сломан');
@@ -25,17 +53,9 @@ class RobotsTxt extends Check
             return false;
         }
     
-        return $this->inProduction()
+        return $this->inProduction
             ? $this->checkForProductionContent($content)
             : $this->checkForDevContent($content);
-    }
-    
-    /**
-     * @return string
-     */
-    function getName()
-    {
-        return "Проверка содержимого robots.txt...";
     }
 
     /**
@@ -67,14 +87,14 @@ class RobotsTxt extends Check
     protected function getRobotsContent()
     {
         $context = null;
-        if (!empty($this->packageConfig['basicAuth'])) {
+        if ($this->basicAuth) {
             $context = stream_context_create([
                 'http' => [
-                    'header'  => "Authorization: Basic " . base64_encode($this->packageConfig['basicAuth'])
+                    'header'  => "Authorization: Basic " . base64_encode($this->basicAuth)
                 ]
             ]);
         }
 
-        return @file_get_contents('https://'. $this->packageConfig['domain'] . '/robots.txt', false, $context);
+        return @file_get_contents('https://'. $this->domain. '/robots.txt', false, $context);
     }
 }

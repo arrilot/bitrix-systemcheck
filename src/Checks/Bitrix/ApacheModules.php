@@ -15,7 +15,7 @@ class ApacheModules extends Check
     /**
      * @return boolean
      */
-    function run()
+    public function run()
     {
         if (!function_exists('apache_get_modules')) {
             return true;
@@ -36,7 +36,7 @@ class ApacheModules extends Check
     /**
      * @return string
      */
-    function getName()
+    public function getName()
     {
         return "Проверка модулей apache...";
     }

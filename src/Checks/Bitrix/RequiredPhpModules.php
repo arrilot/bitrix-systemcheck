@@ -18,7 +18,7 @@ class RequiredPhpModules extends Check
     /**
      * @return boolean
      */
-    function run()
+    public function run()
     {
         $result = true;
         foreach ($this->requiredExtension as $extension) {
@@ -30,11 +30,11 @@ class RequiredPhpModules extends Check
 
         return $result;
     }
-    
+
     /**
      * @return string
      */
-    function getName()
+    public function getName()
     {
         return "Наличие необходимых Битриксу модулей php...";
     }
