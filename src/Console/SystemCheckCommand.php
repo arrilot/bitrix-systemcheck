@@ -71,6 +71,7 @@ class SystemCheckCommand extends Command
     {
         $this->input = $input;
         $this->output = $output;
+        $isVerbose = $this->output->isVerbose();
         
         $config = Configuration::getInstance()->get('bitrix-systemcheck');
         $monitoringName = $input->getArgument('monitoring');
@@ -85,9 +86,9 @@ class SystemCheckCommand extends Command
             ? 'Запуск проверок мониторинга '.$monitoringName.' для окружения '. $config['env'] . ''
             : 'Запуск проверок мониторинга '.$monitoringName.'';
 
-        $this->runChecks($monitoring->checks(), $title);
+        $this->runChecks($monitoring->checks(), $title, $isVerbose);
     
-        if (count($this->skips) && $this->output->isVerbose()) {
+        if (count($this->skips) && $isVerbose) {
             $this->output->writeln('<fg=yellow>Журнал пропуска проверок:</fg=yellow>');
             $this->output->writeln('');
             foreach ($this->skips as $message) {
@@ -112,7 +113,7 @@ class SystemCheckCommand extends Command
         return 0;
     }
     
-    protected function runChecks(array $checks, $title)
+    protected function runChecks(array $checks, $title, $isVerbose)
     {
         $max = count($checks);
         if ($max === 0) {
@@ -123,7 +124,14 @@ class SystemCheckCommand extends Command
         $this->output->writeln('| '.$title);
         $this->output->writeln('|-------------------------------------');
         foreach ($checks as $check) {
-            $this->output->write(sprintf('<fg=yellow>Проверка %s/%s:</fg=yellow> %s ', $current, $max, $check->getName()));
+            $message = sprintf(
+                '<fg=yellow>Проверка %s/%s:</fg=yellow>%s %s ',
+                $current,
+                $max,
+                $isVerbose ? ' '. get_class($check) : '',
+                $check->getName()
+            );
+            $this->output->write($message);
             $this->runCheck($check);
             $current++;
         }

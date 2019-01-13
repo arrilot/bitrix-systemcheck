@@ -9,7 +9,7 @@ class RobotsTxt extends Check
     /**
      * @var string
      */
-    protected $domain;
+    protected $mainPage;
     
     /**
      * @var string|null
@@ -21,9 +21,9 @@ class RobotsTxt extends Check
      */
     private $inProduction;
     
-    public function __construct($domain, $inProduction ,$basicAuth = null)
+    public function __construct($mainPage, $inProduction ,$basicAuth = null)
     {
-        $this->domain = $domain;
+        $this->mainPage = $mainPage;
         $this->inProduction = $inProduction;
         $this->basicAuth = $basicAuth;
     }
@@ -95,6 +95,6 @@ class RobotsTxt extends Check
             ]);
         }
 
-        return @file_get_contents('https://'. $this->domain. '/robots.txt', false, $context);
+        return @file_get_contents($this->mainPage. 'robots.txt', false, $context);
     }
 }

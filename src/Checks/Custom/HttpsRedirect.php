@@ -4,30 +4,22 @@ namespace Arrilot\BitrixSystemCheck\Checks\Custom;
 
 use Arrilot\BitrixSystemCheck\Checks\Check;
 
-class WwwRedirect extends Check
+class HttpsRedirect extends Check
 {
     /**
      * @var string
      */
     protected $mainPage;
-    
+
     /**
      * @var string|null
      */
     protected $basicAuth;
 
-    /**
-     * Проверка no_www -> www редиректа вместо www -> no_www.
-     *
-     * @var bool
-     */
-    private $reverse;
-    
-    public function __construct($mainPage, $basicAuth = null, $reverse = false)
+    public function __construct($mainPage, $basicAuth = null)
     {
         $this->mainPage = $mainPage;
         $this->basicAuth = $basicAuth;
-        $this->reverse = $reverse;
     }
 
     /**
@@ -35,7 +27,7 @@ class WwwRedirect extends Check
      */
     public function getName()
     {
-        return "Проверка редиректа с www на без www...";
+        return "Проверка редиректа с http:// на https://...";
     }
 
     /**
@@ -44,9 +36,7 @@ class WwwRedirect extends Check
     public function run()
     {
         $ch = curl_init();
-        $url = $this->reverse
-            ? str_replace(['http://www.', 'https://www.'], ['http://', 'https://'], $this->mainPage)
-            : str_replace(['http://', 'https://'], ['http://www.', 'https://www.'], $this->mainPage);
+        $url = str_replace('https://', 'http://', $this->mainPage);
     
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);

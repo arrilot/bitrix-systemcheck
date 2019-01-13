@@ -9,16 +9,16 @@ class BasicAuthIsTurnedOn extends Check
     /**
      * @var string
      */
-    protected $domain;
+    protected $mainPage;
 
     /**
      * @var string
      */
     protected $basicAuth;
 
-    public function __construct($domain, $basicAuth)
+    public function __construct($mainPage, $basicAuth)
     {
-        $this->domain = $domain;
+        $this->mainPage = $mainPage;
         $this->basicAuth = $basicAuth;
     }
     
@@ -41,7 +41,7 @@ class BasicAuthIsTurnedOn extends Check
             ]
         ]);
 
-        $page = 'https://'. $this->domain . '/';
+        $page = $this->mainPage;
         $test1 = file_get_contents($page, false, $context);
         if ($test1 === false) {
             $this->logError('Не удалось открыть ' . $page . ' с реквизитами ' . $this->basicAuth);
