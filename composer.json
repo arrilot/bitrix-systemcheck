@@ -13,7 +13,7 @@
   "homepage": "https://github.com/arrilot/bitrix-systemcheck",
   "type": "bitrix-d7-module",
   "extra": {
-    "installer-name": "arrilot.bitrix-systemcheck"
+    "installer-name": "arrilot.systemcheck"
   },
   "require": {
     "php": ">=5.6.0",

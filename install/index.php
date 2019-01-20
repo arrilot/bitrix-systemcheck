@@ -2,79 +2,77 @@
 
 IncludeModuleLangFile(__FILE__);
 
+use Bitrix\Main\Application;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
 
-class arrilot_bitrix_systemcheck extends CModule
+class arrilot_systemcheck extends CModule
 {
-    var $MODULE_ID = 'arrilot.bitrix-systemcheck';
+    var $MODULE_ID = 'arrilot.systemcheck';
     var $MODULE_DESCRIPTION = '';
     function __construct()
     {
-        $arModuleVersion = [];
-        include(__DIR__ . '/version.php');
-        if (is_array($arModuleVersion) && array_key_exists('VERSION', $arModuleVersion)) {
-            $this->MODULE_VERSION = $arModuleVersion['VERSION'];
-            $this->MODULE_VERSION_DATE = $arModuleVersion['VERSION_DATE'];
-        }
+        $this->MODULE_VERSION = '0.1.1';
+        $this->MODULE_VERSION_DATE = '2019-01-01';
 
         $this->MODULE_NAME = 'Bitrix System Checks';
         $this->MODULE_DESCRIPTION = 'Производит мониторинг приложения';
         $this->MODULE_GROUP_RIGHTS = 'N';
     }
+
     public function DoInstall()
     {
         ModuleManager::registerModule($this->MODULE_ID);
         $this->InstallFiles();
+        $this->InstallDB();
     }
+
     public function DoUninstall()
     {
         $this->UnInstallFiles();
+        $this->UnInstallDB();
         ModuleManager::unRegisterModule($this->MODULE_ID);
     }
+
     public function InstallFiles()
     {
-        //создаем симлинк для того чтобы обносления после composer update сразу же отображались на сайте
-        $this->_symlink('../modules/notagency.base/install/components/notagency', $_SERVER["DOCUMENT_ROOT"] . '/bitrix/components/notagency');
         return true;
     }
+
     public function UnInstallFiles()
     {
-        //удаляем симлинк
-        $this->_unlink($_SERVER["DOCUMENT_ROOT"] . '/bitrix/components/notagency');
         return true;
     }
-    /**
-     * A function to emulate symbolic links on Windows.
-     * Uses the junction utility available at:
-     * http://www.sysinternals.com
-     * Note that this will only work on NTFS volumes.
-     *
-     * The syntax of the junction utility is:
-     * junction <junction directory> <junction target>
-     *
-     * Note that the parameter order of the Junction command
-     * is the reverse of the symlink function!
-     *
-     * @link http://php.net/manual/ru/function.symlink.php#70927
-     *
-     * @param string $target
-     * @param string $link
-     */
-    private function _symlink($target, $link)
+    
+    public function InstallDB()
     {
-        if ($_SERVER['WINDIR'] || $_SERVER['windir']) {
-            exec('junction "' . $link . '" "' . $target . '"');
-        } else {
-            symlink($target, $link);
-        }
+        $connection = $connection = Application::getConnection();
+
+        $connection->query('DROP TABLE IF EXISTS arrilot_systemcheck_checks_data');
+
+        $sql = "
+        CREATE TABLE `arrilot_systemcheck_checks_data` (
+          `ID` INT NOT NULL AUTO_INCREMENT,
+          `MONITORING` VARCHAR(256) NOT NULL,
+          `CHECK` VARCHAR(256) NOT NULL,
+          `DATA` TEXT NOT NULL,
+          `CREATED_AT` DATETIME NOT NULL,
+          PRIMARY KEY (id),
+          INDEX IX_CREATED_AT (`CREATED_AT`),
+          INDEX IX_MONITORING (`MONITORING`),
+          INDEX IX_CHECK (`CHECK`)
+        );";
+        $connection->query($sql);
+        
+        return true;
     }
-    private function _unlink($link)
+    
+    public function UnInstallDB()
     {
-        if ($_SERVER['WINDIR'] || $_SERVER['windir']) {
-            exec('junction -d "' . $link . '"');
-        } else {
-            @unlink($link);
-        }
+        $connection = $connection = Application::getConnection();
+
+        $connection->query('DROP TABLE IF EXISTS arrilot_systemcheck_checks_data');
+
+        return true;
     }
 }
