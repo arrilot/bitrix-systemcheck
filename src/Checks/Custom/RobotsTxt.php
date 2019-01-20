@@ -41,6 +41,7 @@ class RobotsTxt extends Check
      */
     public function run()
     {
+        $this->skip('Not implemented yet');
         $content = $this->getRobotsContent();
         if (empty($content)) {
             $this->logError('robots.txt пуст либо сломан');
