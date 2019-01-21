@@ -73,11 +73,9 @@ class DataStorage
             $this->helper->forSql($this->monitoringName),
             (int) $days
         );
-        
-        //dd($sql);
-    
+
         $this->connection->query($sql);
-        
+
         return $this;
     }
 }

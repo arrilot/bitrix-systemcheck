@@ -16,7 +16,7 @@ abstract class Check
      * @var DataStorage|null
      */
     protected $dataStorage = null;
-    
+
     /**
      * @return boolean
      */
@@ -43,7 +43,7 @@ abstract class Check
     {
         $this->errorMessages[] =  get_class($this) . ': ' . $message;
     }
-    
+
     /**
      * Skip check.
      *
@@ -53,7 +53,7 @@ abstract class Check
     {
         throw new SkipCheckException(get_class($this) . ': '. $message);
     }
-    
+
     /**
      * @param array|string $extensions
      * @return bool
@@ -85,7 +85,7 @@ abstract class Check
 
         return true;
     }
-    
+
     /**
      * Setter for data storage.
      * @param DataStorage $dataStorage
@@ -97,9 +97,10 @@ abstract class Check
 
         return $this;
     }
-    
+
     /**
-     * Get Data from lastCheck
+     * Get Data from lastCheck.
+     *
      * @return array
      */
     public function getPreviousData()
@@ -107,12 +108,12 @@ abstract class Check
         if (! $this->dataStorage) {
             return [];
         }
-        
+
         $row = (array) $this->dataStorage->getData(get_class());
         if (!$row) {
             return [];
         }
-        
+
         $data = json_decode($row['DATA'], true);
         if ($data === null) {
             $data =  [];
@@ -124,7 +125,7 @@ abstract class Check
 
         return $data;
     }
-    
+
     /**
      * Save current check Data to storage.
      * @param array $data

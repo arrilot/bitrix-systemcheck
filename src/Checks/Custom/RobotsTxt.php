@@ -41,8 +41,6 @@ class RobotsTxt extends Check
      */
     public function run()
     {
-        dd($this->getPreviousData());
-        $this->saveData(['foo' => 'bar2']);
         $this->skip('Not implemented yet');
         $content = $this->getRobotsContent();
         if (empty($content)) {
