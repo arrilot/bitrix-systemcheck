@@ -86,7 +86,8 @@ class SystemCheckCommand extends Command
             ? 'Запуск проверок мониторинга '.$monitoringName.' для окружения '. $config['env'] . ''
             : 'Запуск проверок мониторинга '.$monitoringName.'';
 
-        $this->runChecks($monitoring->checks(), $title, $isVerbose);
+        $monitoring->getDataStorage()->cleanOutdatedData($monitoring->dataTtlDays);
+        $this->runChecks($monitoring->checks(), $monitoring, $title, $isVerbose);
     
         if (count($this->skips) && $isVerbose) {
             $this->output->writeln('<fg=yellow>Журнал пропуска проверок:</fg=yellow>');
@@ -113,7 +114,7 @@ class SystemCheckCommand extends Command
         return 0;
     }
     
-    protected function runChecks(array $checks, $title, $isVerbose)
+    protected function runChecks(array $checks, Monitoring $monitoring, $title, $isVerbose)
     {
         $max = count($checks);
         if ($max === 0) {
@@ -124,6 +125,7 @@ class SystemCheckCommand extends Command
         $this->output->writeln('| '.$title);
         $this->output->writeln('|-------------------------------------');
         foreach ($checks as $check) {
+            $check->setDataStorage($monitoring->getDataStorage());
             $message = sprintf(
                 '<fg=yellow>Проверка %s/%s:</fg=yellow>%s %s ',
                 $current,

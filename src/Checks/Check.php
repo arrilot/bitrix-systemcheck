@@ -2,8 +2,8 @@
 
 namespace Arrilot\BitrixSystemCheck\Checks;
 
+use Arrilot\BitrixSystemCheck\Monitorings\DataStorage;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
-use Bitrix\Main\Application;
 
 abstract class Check
 {
@@ -13,6 +13,11 @@ abstract class Check
     protected $errorMessages = [];
 
     /**
+     * @var DataStorage|null
+     */
+    protected $dataStorage = null;
+    
+    /**
      * @return boolean
      */
     abstract public function run();
@@ -21,7 +26,7 @@ abstract class Check
      * @return string
      */
     abstract public function getName();
-    
+
     /**
      * @return array
      */
@@ -79,5 +84,58 @@ abstract class Check
         }
 
         return true;
+    }
+    
+    /**
+     * Setter for data storage.
+     * @param DataStorage $dataStorage
+     * @return Check
+     */
+    public function setDataStorage(DataStorage $dataStorage)
+    {
+        $this->dataStorage = $dataStorage;
+
+        return $this;
+    }
+    
+    /**
+     * Get Data from lastCheck
+     * @return array
+     */
+    public function getPreviousData()
+    {
+        if (! $this->dataStorage) {
+            return [];
+        }
+        
+        $row = (array) $this->dataStorage->getData(get_class());
+        if (!$row) {
+            return [];
+        }
+        
+        $data = json_decode($row['DATA'], true);
+        if ($data === null) {
+            $data =  [];
+        }
+
+        if (is_object($row['CREATED_AT'])) {
+            $data['_created_at'] = $row['CREATED_AT']->getTimestamp();
+        }
+
+        return $data;
+    }
+    
+    /**
+     * Save current check Data to storage.
+     * @param array $data
+     * @return $this
+     */
+    public function saveData($data)
+    {
+        if ($this->dataStorage) {
+            $this->dataStorage->saveData(get_class(), $data);
+        }
+
+        return $this;
     }
 }
