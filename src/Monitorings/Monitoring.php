@@ -17,16 +17,32 @@ abstract class Monitoring
     {
         $this->dataStorage = new DataStorage(get_class());
     }
-
+    
     /**
+     * Russian monitoring name
+     *
+     * @return string
+     */
+    abstract public function name();
+    
+    /**
+     * Monitoring code (id)
+     *
+     * @return string
+     */
+    abstract public function code();
+    
+    /**
+     * Array of checks.
+     *
      * @return array
      */
-    abstract function checks();
+    abstract public function checks();
 
     /**
      * @return LoggerInterface|null
      */
-    abstract function logger();
+    abstract public function logger();
 
     /**
      * @return DataStorage

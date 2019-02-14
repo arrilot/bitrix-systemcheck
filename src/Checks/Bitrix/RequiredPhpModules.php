@@ -34,7 +34,7 @@ class RequiredPhpModules extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Наличие необходимых Битриксу модулей php...";
     }

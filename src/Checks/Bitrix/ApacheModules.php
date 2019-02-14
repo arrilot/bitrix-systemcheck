@@ -36,7 +36,7 @@ class ApacheModules extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка модулей apache...";
     }

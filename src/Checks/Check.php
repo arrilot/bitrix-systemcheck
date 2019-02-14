@@ -25,7 +25,7 @@ abstract class Check
     /**
      * @return string
      */
-    abstract public function getName();
+    abstract public function name();
 
     /**
      * @return array

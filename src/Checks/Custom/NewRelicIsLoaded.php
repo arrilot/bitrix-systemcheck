@@ -9,7 +9,7 @@ class NewRelicIsLoaded extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка, что расширение newrelic загружено...";
     }

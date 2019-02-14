@@ -17,7 +17,7 @@ class arrilot_systemcheck extends CModule
 
         $this->MODULE_NAME = 'Bitrix System Checks';
         $this->MODULE_DESCRIPTION = 'Производит мониторинг приложения';
-        $this->MODULE_GROUP_RIGHTS = 'N';
+        $this->MODULE_GROUP_RIGHTS = 'Y';
     }
 
     public function DoInstall()
@@ -36,11 +36,13 @@ class arrilot_systemcheck extends CModule
 
     public function InstallFiles()
     {
+        CopyDirFiles(__DIR__ ."/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin", true, true);
         return true;
     }
 
     public function UnInstallFiles()
     {
+        DeleteDirFiles(__DIR__ . "/admin", $_SERVER["DOCUMENT_ROOT"]."/bitrix/admin");
         return true;
     }
     
@@ -63,6 +65,15 @@ class arrilot_systemcheck extends CModule
           INDEX IX_CHECK (`CHECK`)
         );";
         $connection->query($sql);
+    
+        $eventManager = \Bitrix\Main\EventManager::getInstance();
+        $eventManager->registerEventHandler(
+            'main',
+            'OnBuildGlobalMenu',
+            $this->MODULE_ID,
+            '\Arrilot\BitrixSystemCheck\EventHandlers',
+            'addMonitoringPageToAdminMenu'
+        );
         
         return true;
     }
@@ -72,6 +83,15 @@ class arrilot_systemcheck extends CModule
         $connection = $connection = Application::getConnection();
 
         $connection->query('DROP TABLE IF EXISTS arrilot_systemcheck_checks_data');
+    
+        $eventManager = \Bitrix\Main\EventManager::getInstance();
+        $eventManager->unRegisterEventHandler(
+            'main',
+            'OnBuildGlobalMenu',
+            $this->MODULE_ID,
+            '\Arrilot\BitrixSystemCheck\EventHandlers',
+            'addMonitoringPageToAdminMenu'
+        );
 
         return true;
     }

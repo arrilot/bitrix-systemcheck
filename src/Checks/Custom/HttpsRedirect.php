@@ -25,7 +25,7 @@ class HttpsRedirect extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка редиректа с http:// на https://...";
     }

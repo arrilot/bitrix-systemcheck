@@ -74,17 +74,23 @@ class SystemCheckCommand extends Command
         $isVerbose = $this->output->isVerbose();
         
         $config = Configuration::getInstance()->get('bitrix-systemcheck');
-        $monitoringName = $input->getArgument('monitoring');
-        if (!isset($config['monitorings'][$monitoringName])) {
-            $this->output->writeln('<fg=red>Мониторинг '.$monitoringName.' не найден</fg=red>');
+        $monitoringCode = $input->getArgument('monitoring');
+        $monitorings = [];
+        foreach ((array) $config['monitorings'] as $monitoringClass) {
+            /** @var Monitoring $monitoring */
+            $monitoring = new $monitoringClass;
+            $monitorings[$monitoring->code()] = $monitoring;
+        }
+        if (!isset($monitorings[$monitoringCode])) {
+            $this->output->writeln('<fg=red>Мониторинг '.$monitoringCode.' не найден</fg=red>');
             return 1;
         }
         /** @var Monitoring $monitoring */
-        $monitoring = new $config['monitorings'][$monitoringName];
+        $monitoring = $monitorings[$monitoringCode];
         $this->logger = $monitoring->logger();
         $title = !empty($config['env'])
-            ? 'Запуск проверок мониторинга '.$monitoringName.' для окружения '. $config['env'] . ''
-            : 'Запуск проверок мониторинга '.$monitoringName.'';
+            ? 'Запуск проверок мониторинга '.$monitoringCode.' для окружения '. $config['env'] . ''
+            : 'Запуск проверок мониторинга '.$monitoringCode.'';
 
         $monitoring->getDataStorage()->cleanOutdatedData($monitoring->dataTtlDays);
         $this->runChecks($monitoring->checks(), $monitoring, $title, $isVerbose);
@@ -131,7 +137,7 @@ class SystemCheckCommand extends Command
                 $current,
                 $max,
                 $isVerbose ? ' '. get_class($check) : '',
-                $check->getName()
+                $check->name()
             );
             $this->output->write($message);
             $this->runCheck($check);

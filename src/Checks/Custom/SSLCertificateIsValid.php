@@ -32,7 +32,7 @@ class SSLCertificateIsValid extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка валидности SSL сертификата...";
     }

@@ -25,7 +25,7 @@ class BasicAuthIsTurnedOn extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка на наличие basic-auth...";
     }

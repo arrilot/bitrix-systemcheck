@@ -31,7 +31,7 @@ class RobotsTxt extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка содержимого robots.txt...";
     }
@@ -42,21 +42,21 @@ class RobotsTxt extends Check
     public function run()
     {
         $this->skip('Not implemented yet');
-        $content = $this->getRobotsContent();
-        if (empty($content)) {
-            $this->logError('robots.txt пуст либо сломан');
-            return false;
-        }
-
-        $contentAsArray = explode(PHP_EOL, $content);
-        if ($contentAsArray[0] === "# Данный файл не отдается никаким роботам и служит лишь как заглушка на случай неправильной настройки веб-сервера") {
-            $this->logError('Веб-сервер не настроен на корректную отдачу robots.txt');
-            return false;
-        }
-    
-        return $this->inProduction
-            ? $this->checkForProductionContent($content)
-            : $this->checkForDevContent($content);
+//        $content = $this->getRobotsContent();
+//        if (empty($content)) {
+//            $this->logError('robots.txt пуст либо сломан');
+//            return false;
+//        }
+//
+//        $contentAsArray = explode(PHP_EOL, $content);
+//        if ($contentAsArray[0] === "# Данный файл не отдается никаким роботам и служит лишь как заглушка на случай неправильной настройки веб-сервера") {
+//            $this->logError('Веб-сервер не настроен на корректную отдачу robots.txt');
+//            return false;
+//        }
+//
+//        return $this->inProduction
+//            ? $this->checkForProductionContent($content)
+//            : $this->checkForDevContent($content);
     }
 
     /**

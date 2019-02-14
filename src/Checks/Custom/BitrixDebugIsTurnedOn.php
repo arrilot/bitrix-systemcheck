@@ -10,7 +10,7 @@ class BitrixDebugIsTurnedOn extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка на exception_handling.debug = true ...";
     }

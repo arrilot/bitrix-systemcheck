@@ -100,7 +100,7 @@ class PhpSettings extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Корректность необходимых Битриксу настроек php...";
     }

@@ -33,7 +33,7 @@ class WwwRedirect extends Check
     /**
      * @return string
      */
-    public function getName()
+    public function name()
     {
         return "Проверка редиректа с www на без www...";
     }
