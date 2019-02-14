@@ -8,6 +8,8 @@ use Arrilot\BitrixSystemCheck\Exceptions\FailCheckException;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
 use Arrilot\BitrixSystemCheck\Monitorings\Monitoring;
 use Bitrix\Main\Config\Configuration;
+use Bitrix\Main\Loader;
+use Bitrix\Main\LoaderException;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\LoggerInterfaceTest;
@@ -72,7 +74,17 @@ class SystemCheckCommand extends Command
         $this->input = $input;
         $this->output = $output;
         $isVerbose = $this->output->isVerbose();
-        
+
+        try {
+            if (!Loader::includeModule('arrilot.systemcheck')) {
+                $this->output->writeln('<fg=red>Модуль arrilot.systemcheck не установлен</fg=red>');
+                return 1;
+            }
+        } catch (LoaderException $e) {
+            $this->output->writeln('<fg=red>'. $e->getMessage(). '</fg=red>');
+            return 1;
+        }
+    
         $config = Configuration::getInstance()->get('bitrix-systemcheck');
         $monitoringCode = $input->getArgument('monitoring');
         $monitorings = [];

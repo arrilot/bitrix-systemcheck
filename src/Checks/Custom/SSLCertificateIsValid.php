@@ -12,12 +12,7 @@ class SSLCertificateIsValid extends Check
      * @var string
      */
     protected $domain;
-    
-    /**
-     * @var int
-     */
-    private $timeout;
-    
+
     /**
      * @var int
      */
@@ -92,7 +87,7 @@ class SSLCertificateIsValid extends Check
                 "ssl://{$domain}:443",
                 $errorNumber,
                 $errorDescription,
-                $this->timeout,
+                10,
                 STREAM_CLIENT_CONNECT,
                 $streamContext
             );
@@ -100,7 +95,11 @@ class SSLCertificateIsValid extends Check
             $this->logError($e->getMessage());
             return [];
         }
-  
+
+        if ($errorNumber && $errorDescription) {
+            $this->logError('stream_socket_client error '. $errorNumber . ': ' . $errorDescription);
+        }
+
         $response = stream_context_get_params($client);
         fclose($client);
         

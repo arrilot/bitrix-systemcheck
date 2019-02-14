@@ -33,8 +33,11 @@ class PhpSettings extends Check
             'zend.multibyte' => 0
         );
 
-        foreach($arRequiredParams as $param => $val)
-        {
+        foreach($arRequiredParams as $param => $val) {
+            if ($param === 'session.auto_start' && $this->inConsole()) {
+                continue;
+            }
+
             $cur = ini_get($param);
             if (strtolower($cur) == 'on')
                 $cur = 1;
@@ -54,7 +57,7 @@ class PhpSettings extends Check
             $this->logError(sprintf('Параметр %s = %s, требуется %s', $param, $cur ? htmlspecialcharsbx($cur) : 'off', '60'));
         }
 
-        if (php_sapi_name() !== 'cli' && ($m = ini_get('max_input_vars')) && $m < 10000) {
+        if (!$this->inConsole() && ($m = ini_get('max_input_vars')) && $m < 10000) {
             $result = false;
             $this->logError(sprintf('Значение max_input_vars должно быть не ниже %s. Текущее значение: %s', 10000, $m));
         }
@@ -103,5 +106,13 @@ class PhpSettings extends Check
     public function name()
     {
         return "Корректность необходимых Битриксу настроек php...";
+    }
+
+    /**
+     * @return bool
+     */
+    protected function inConsole()
+    {
+        return php_sapi_name() === 'cli';
     }
 }

@@ -11,7 +11,7 @@ class XDebugIsNotLoaded extends Check
      */
     public function name()
     {
-        return "Проверка, что расширение xdebug загружено...";
+        return "Проверка, что расширение xdebug не загружено...";
     }
 
     /**
