@@ -33,6 +33,17 @@ class Mail extends Check
             }
         }
 
+        /** @var false|array $notSentMail - Массив идентификаторов неотправленных писем */
+        $notSentMail = db()->query('SELECT ID FROM b_event WHERE SUCCESS_EXEC != "Y"');
+        if ($notSentMail) {
+            $notSentLetters = 0;
+            while ($notSentMail->fetch()) {
+                $notSentLetters++;
+            }
+            $this->logError('В базе имеются ' . $notSentLetters . ' неотправленных писем');
+            $result = false;
+        }
+
         return $result;
     }
 

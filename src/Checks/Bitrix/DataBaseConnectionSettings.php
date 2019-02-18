@@ -1,6 +1,6 @@
 <?php
 
-namespace Arrilot\BitrixSystemCheck\Checks\Custom;
+namespace Arrilot\BitrixSystemCheck\Checks\Bitrix;
 
 use Arrilot\BitrixSystemCheck\Checks\Check;
 use Bitrix\Main\Config\Configuration;
