@@ -1,8 +1,9 @@
 <?php
 
-namespace Arrilot\BitrixSystemCheck\Checks\Custom;
+namespace Arrilot\BitrixSystemCheck\Checks\Bitrix;
 
 use Arrilot\BitrixSystemCheck\Checks\Check;
+use CSiteCheckerTest;
 
 /**
  * Класс для тестирования отправки писем
@@ -18,33 +19,30 @@ class Mail extends Check
      */
     public function run()
     {
-        $result = false;
+        /** @var bool $defaultMailResult - Результат отправки письма */
+        $defaultMailResult = false;
+        /** @var bool $largeMailResult - Результат отправки большого письма (более 64кб) */
+        $largeMailResult = false;
         if (function_exists('mail')) {
-            $emailTo = 'test@testmail.com';
+            $emailTo = 'hosting_test@bitrixsoft.com';
             $subject = 'testing mail server';
             $message = 'testing mail server';
             $headers = 'From: webmaster@example.com' . "\r\n" .
                 'Reply-To: webmaster@example.com' . "\r\n" .
                 'X-Mailer: PHP/' . phpversion();
 
-            $result = mail($emailTo, $subject, $message, $headers);
-            if (!$result) {
+            $defaultMailResult = mail($emailTo, $subject, $message, $headers);
+            if (!$defaultMailResult) {
                 $this->logError('Почтовый сервер не настроен');
             }
-        }
 
-        /** @var false|array $notSentMail - Массив идентификаторов неотправленных писем */
-        $notSentMail = db()->query('SELECT ID FROM b_event WHERE SUCCESS_EXEC != "Y"');
-        if ($notSentMail) {
-            $notSentLetters = 0;
-            while ($notSentMail->fetch()) {
-                $notSentLetters++;
+            $largeMailResult = (new CSiteCheckerTest)->check_mail_big();
+            if (!$largeMailResult) {
+                $this->logError('Отправка большого почтового сообщения не удалась');
             }
-            $this->logError('В базе имеются ' . $notSentLetters . ' неотправленных писем');
-            $result = false;
         }
 
-        return $result;
+        return $defaultMailResult && $largeMailResult;
     }
 
     /**

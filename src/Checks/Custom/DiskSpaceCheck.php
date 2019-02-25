@@ -11,6 +11,23 @@ use Arrilot\BitrixSystemCheck\Checks\Check;
  */
 class DiskSpaceCheck extends Check
 {
+    /** @var int $limitBytes - Минимальный порог для свободного места (в байтах) */
+    private $limitBytes;
+
+    /** @var int $limitMegaBytes - Минимальный порог для свободного места (в мегабайтах) */
+    private $limitMegaBytes;
+
+    /**
+     * DiskSpaceCheck constructor.
+     *
+     * @param int $limit - Минимальный порог для свободного места (в мегабайтах)
+     */
+    public function __construct($limit = 500)
+    {
+        $this->limitMegaBytes = $limit;
+        $this->limitBytes = $limit * 1000000;
+    }
+
     /**
      * Запускаем проверку
      *
@@ -19,8 +36,10 @@ class DiskSpaceCheck extends Check
     public function run()
     {
         $result = true;
-        if (disk_free_space('/') < 500000000) {
-            $this->logError('На сервере заканчивается свободное место (осталось менее 500мб)');
+        if (disk_free_space('/') < $this->limitBytes) {
+            $this->logError(
+                'На сервере заканчивается свободное место (осталось менее ' . $this->limitMegaBytes . 'мб)'
+            );
             $result = false;
         }
 

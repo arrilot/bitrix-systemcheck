@@ -29,13 +29,13 @@ class SitesCheck extends Check
             $sitesEncodings[] = $site['CHARSET'];
 
             if ($site['DOC_ROOT']) {
-                if (!is_link($site['DOC_ROOT'] . '/bitrix')) {
-                    $this->logError('Отсутствует символьная ссылка в корне проекта ' . $site['SERVER_NAME']);
+                if (!is_dir($site['DOC_ROOT'] . '/bitrix')) {
+                    $this->logError('Отсутствует директория bitrix в корне проекта ' . $site['SERVER_NAME']);
                     $result = false;
                 }
             } else {
-                if (!is_link($_SERVER['DOCUMENT_ROOT'] . '/bitrix')) {
-                    $this->logError('Отсутствует символьная ссылка в корне проекта ' . $site['SERVER_NAME']);
+                if (!is_dir($_SERVER['DOCUMENT_ROOT'] . '/bitrix')) {
+                    $this->logError('Отсутствует директория bitrix в корне проекта ' . $site['SERVER_NAME']);
                     $result = false;
                 }
             }

@@ -11,6 +11,23 @@ use Arrilot\BitrixSystemCheck\Checks\Check;
  */
 class RamCheck extends Check
 {
+    /** @var int $limitBytes - Минимальный порог для свободной памяти (в килобайтах) */
+    private $limitKiloBytes;
+
+    /** @var int $limitBytes - Минимальный порог для свободной памяти (в мегабайтах) */
+    private $limitMegaBytes;
+
+    /**
+     * RamCheck constructor.
+     *
+     * @param int $limit - Минимальный порог для свободного места (в мегабайтах)
+     */
+    public function __construct($limit = 500)
+    {
+        $this->limitMegaBytes = $limit;
+        $this->limitKiloBytes = $limit * 1000;
+    }
+
     /**
      * Запускаем проверку
      *
@@ -22,6 +39,9 @@ class RamCheck extends Check
         $result = true;
         /** @var resource $systemFile - Файл с информацией о памяти */
         $systemFile = fopen('/proc/meminfo', 'r');
+        if (!$systemFile) {
+            $this->skip('Не удалось открыть файл');
+        }
 
         $memory = 0;
         while ($line = fgets($systemFile)) {
@@ -33,8 +53,8 @@ class RamCheck extends Check
         }
         fclose($systemFile);
 
-        if ($memory < 500000) {
-            $this->logError('На сервере мало свободной оперативной памяти');
+        if ($memory < $this->limitKiloBytes) {
+            $this->logError('На сервере мало свободной оперативной памяти (менее ' . $this->limitMegaBytes . ' мб)');
             $result = false;
         }
 
