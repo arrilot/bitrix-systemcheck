@@ -25,7 +25,7 @@ class DiskSpaceCheck extends Check
     public function __construct($limit = 500)
     {
         $this->limitMegaBytes = $limit;
-        $this->limitBytes = $limit * 1000000;
+        $this->limitBytes = $limit * pow(1024, 2);
     }
 
     /**

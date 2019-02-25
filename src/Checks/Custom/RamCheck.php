@@ -25,7 +25,7 @@ class RamCheck extends Check
     public function __construct($limit = 500)
     {
         $this->limitMegaBytes = $limit;
-        $this->limitKiloBytes = $limit * 1000;
+        $this->limitKiloBytes = $limit * 1024;
     }
 
     /**

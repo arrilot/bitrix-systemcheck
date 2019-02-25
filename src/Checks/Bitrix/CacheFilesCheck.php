@@ -19,7 +19,13 @@ class CacheFilesCheck extends Check
      */
     public function run()
     {
-        return (new CSiteCheckerTest)->check_cache();
+        $result = true;
+        if ((new CSiteCheckerTest)->check_cache()) {
+            $result = false;
+            $this->logError('Кеширование при помощи файлов не настроено');
+        }
+
+        return $result;
     }
 
     /**

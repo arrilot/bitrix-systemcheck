@@ -19,7 +19,13 @@ class UpdateServerCheck extends Check
      */
     public function run()
     {
-        return (new CSiteCheckerTest)->check_update();
+        $result = true;
+        if (!(new CSiteCheckerTest)->check_update()) {
+            $result = false;
+            $this->logError('Нет соединения с сервером обновлений');
+        }
+
+        return $result;
     }
 
     /**
