@@ -22,7 +22,7 @@ class DiskSpaceCheck extends Check
      *
      * @param int $limit - Минимальный порог для свободного места (в мегабайтах)
      */
-    public function __construct($limit = 500)
+    public function __construct($limit)
     {
         $this->limitMegaBytes = $limit;
         $this->limitBytes = $limit * pow(1024, 2);
@@ -36,10 +36,9 @@ class DiskSpaceCheck extends Check
     public function run()
     {
         $result = true;
-        if (disk_free_space('/') < $this->limitBytes) {
-            $this->logError(
-                'На сервере заканчивается свободное место (осталось менее ' . $this->limitMegaBytes . 'мб)'
-            );
+        $freeSpace = disk_free_space('/');
+        if ($freeSpace < $this->limitBytes) {
+            $this->logError('На сервере заканчивается свободное место (' . intval($freeSpace / 1024 / 1024) . ' < ' . $this->limitMegaBytes . ' мб)');
             $result = false;
         }
 
@@ -53,6 +52,6 @@ class DiskSpaceCheck extends Check
      */
     public function name()
     {
-        return 'Проверка свободного места в файловой системе...';
+        return 'Проверка свободного места на жестком диске...';
     }
 }

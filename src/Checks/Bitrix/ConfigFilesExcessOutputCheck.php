@@ -12,8 +12,18 @@ use CSiteCheckerTest;
  */
 class ConfigFilesExcessOutputCheck extends Check
 {
+    /**
+     * @var array extra files to check.
+     */
+    protected $extraFiles;
+
     /** @var bool $result - Результат проверки */
     private $result;
+
+    public function __construct($extraFiles = [])
+    {
+        $this->extraFiles = [];
+    }
 
     /**
      * Проверяем указанный файл
@@ -21,8 +31,12 @@ class ConfigFilesExcessOutputCheck extends Check
      * @param string $filePath - Путь до файла, который необходимо проверить
      * @return void
      */
-    private function checkFile(string $filePath)
+    private function checkFile($filePath)
     {
+        if (!file_exists($filePath)) {
+            return;
+        }
+
         $file = file_get_contents($filePath);
         if (preg_match('/<\?php(.+?)\?>.*?[^<\?]/s', $file) || preg_match('/[\s\S]<\?php/', $file)) {
             $this->logError('В файле ' . $filePath . ' обнаружены лишние символы (пробелы, переносы и т.д.)');
@@ -38,8 +52,18 @@ class ConfigFilesExcessOutputCheck extends Check
     public function run()
     {
         $this->result = true;
-        $this->checkFile(realpath($_SERVER['DOCUMENT_ROOT'] . '/../config/dbconn.php'));
-        $this->checkFile(realpath($_SERVER['DOCUMENT_ROOT'] . '/../app/local/php_interface/init.php'));
+        $bitrixDir = $_SERVER['DOCUMENT_ROOT'] . BX_PERSONAL_ROOT;
+        $localDir = $_SERVER['DOCUMENT_ROOT'] . '/local';
+
+        $this->checkFile($bitrixDir . '/php_interface/dbconn.php');
+        $this->checkFile($bitrixDir . '/php_interface/init.php');
+        $this->checkFile($bitrixDir . '/php_interface/after_connect.php');
+        $this->checkFile($bitrixDir . '/php_interface/after_connect_d7.php');
+        $this->checkFile($localDir . '/php_interface/init.php');
+        foreach ($this->extraFiles as $extraFile) {
+            $this->checkFile($extraFile);
+        }
+
         return $this->result;
     }
 

@@ -83,6 +83,6 @@ class ServiceScriptsAreRemoved extends Check
      */
     public function name()
     {
-        return 'Проверка наличия служебных скриптов в корне сайта';
+        return 'Проверка наличия служебных скриптов в корне сайта...';
     }
 }

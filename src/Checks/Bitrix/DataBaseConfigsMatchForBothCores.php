@@ -10,7 +10,7 @@ use Bitrix\Main\Config\Configuration;
  * Class DataBaseConnectionSettings
  * @package Arrilot\BitrixSystemCheck\Checks\Custom
  */
-class DataBaseConnectionSettings extends Check
+class DataBaseConfigsMatchForBothCores extends Check
 {
     /** @var bool $result - Результат проверки */
     private $result = true;
@@ -22,16 +22,7 @@ class DataBaseConnectionSettings extends Check
      */
     public function run()
     {
-        /** @var null|string $DBHost - Хост */
-        $DBHost = null;
-        /** @var null|string $DBName - Название БД */
-        $DBName = null;
-        /** @var null|string $DBLogin - Логин от БД */
-        $DBLogin = null;
-        /** @var null|string $DBPassword - Пароль от БД */
-        $DBPassword = null;
-
-        require($_SERVER['DOCUMENT_ROOT'] . '/../config/dbconn.php');
+        global $DBHost, $DBName, $DBLogin, $DBPassword;
         $connectionsSettings = Configuration::getInstance()->get('connections')['default'];
 
         $this->check('host', $connectionsSettings['host'], $DBHost);
@@ -51,12 +42,12 @@ class DataBaseConnectionSettings extends Check
      */
     private function check($paramName, $settingsParam, $dbconnParam)
     {
-        if ($settingsParam != $dbconnParam) {
+        if ($settingsParam !== $dbconnParam) {
             $this->logError(
                 'Параметр ' . $paramName
-                    . 'в config/dbconn.php не соответствует этому же параметру в bitrix/.settings.php'
+                    . ' в dbconn.php не соответствует этому же параметру в .settings.php'
             );
-            $this->result = true;
+            $this->result = false;
         }
     }
 
@@ -67,6 +58,6 @@ class DataBaseConnectionSettings extends Check
      */
     public function name()
     {
-        return 'Проверка параметров подключения к базе данных...';
+        return 'Проверка совпадения параметров подключения к базе данных в старом и новом ядре...';
     }
 }

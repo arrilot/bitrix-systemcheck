@@ -139,4 +139,12 @@ abstract class Check
 
         return $this;
     }
+
+    /**
+     * @return bool
+     */
+    protected function inConsole()
+    {
+        return php_sapi_name() === 'cli';
+    }
 }

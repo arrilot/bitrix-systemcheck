@@ -10,8 +10,13 @@ use Bitrix\Main\Config\Configuration;
  * Class EncodingIsCorrect
  * @package Arrilot\BitrixSystemCheck\Checks\Custom
  */
-class EncodingIsCorrect extends Check
+class EncodingSettingsAreCorrect extends Check
 {
+    /**
+     * @var bool пропускать проверку на func_overload для консоли.
+     */
+    protected $skipFuncOverloadForConsole;
+
     /** @var bool $result - Результат проверки */
     private $result = true;
 
@@ -22,10 +27,12 @@ class EncodingIsCorrect extends Check
      * EncodingIsCorrect constructor.
      *
      * @param string $encoding
+     * @param bool $skipFuncOverloadForConsole
      */
-    public function __construct(string $encoding = 'UTF-8')
+    public function __construct($encoding = 'UTF-8', $skipFuncOverloadForConsole = false)
     {
         $this->encoding = strtoupper($encoding);
+        $this->skipFuncOverloadForConsole = $skipFuncOverloadForConsole;
     }
 
     /**
@@ -38,11 +45,6 @@ class EncodingIsCorrect extends Check
         /** @var array $parameters - Параметры, которые необходимо проверить */
         $parameters = [
             [
-                'name' => 'mbstring.func_overload',
-                'value' => 2,
-                'action' => 'checkIniSettings'
-            ],
-            [
                 'name' => 'utf_mode',
                 'value' => true,
                 'action' => 'checkBitrixConfiguration'
@@ -53,6 +55,14 @@ class EncodingIsCorrect extends Check
                 'action' => 'checkConstants'
             ]
         ];
+
+        if (!$this->inConsole() || !$this->skipFuncOverloadForConsole) {
+            $parameters[] = [
+                'name' => 'mbstring.func_overload',
+                'value' => 2,
+                'action' => 'checkIniSettings'
+            ];
+        }
 
         $this->checkEncodingSettings($parameters);
     }
@@ -67,16 +77,19 @@ class EncodingIsCorrect extends Check
         /** @var array $parameters - Параметры, которые необходимо проверить */
         $parameters = [
             [
+                'name' => 'utf_mode',
+                'value' => false,
+                'action' => 'checkBitrixConfiguration'
+            ],
+        ];
+
+        if (!$this->inConsole() || !$this->skipFuncOverloadForConsole) {
+            $parameters[] = [
                 'name' => 'mbstring.func_overload',
                 'value' => 0,
                 'action' => 'checkIniSettings'
-            ],
-            [
-                'name' => 'mbstring.internal_encoding',
-                'value' => 'cp1251',
-                'action' => 'checkIniSettings'
-            ]
-        ];
+            ];
+        }
 
         $this->checkEncodingSettings($parameters);
     }
@@ -90,13 +103,14 @@ class EncodingIsCorrect extends Check
     private function checkEncodingSettings($parameters)
     {
         /** @var array $commonParameters - Параметры, общие для всех кодировок */
-        $commonParameters = [
-            [
-                'name' => 'default_charset',
-                'value' => $this->encoding,
-                'action' => 'checkIniSettings'
-            ]
-        ];
+        $commonParameters = [];
+//        $commonParameters = [
+//            [
+//                'name' => 'default_charset',
+//                'value' => $this->encoding,
+//                'action' => 'checkIniSettings'
+//            ]
+//        ];
 
         /** @var array $parameters - Массив параметров, которые необходимо проверить */
         $parameters = array_merge($parameters, $commonParameters);
@@ -116,7 +130,8 @@ class EncodingIsCorrect extends Check
     private function checkIniSettings($name, $value)
     {
         if (ini_get($name) != $value) {
-            $this->logError('Неверное значение ' . $name);
+            $valueString = $this->formatValuesAsString($value);
+            $this->logError("В php.ini параметр $name должен иметь значение $valueString");
             $this->result = false;
         }
     }
@@ -131,7 +146,8 @@ class EncodingIsCorrect extends Check
     private function checkBitrixConfiguration($name, $value)
     {
         if (Configuration::getInstance()->get($name) != $value) {
-            $this->logError('Неверное значение ' . $name . ' в .settings.php');
+            $valueString = $this->formatValuesAsString($value);
+            $this->logError("В .settings.php параметр $name должен иметь значение $valueString");
             $this->result = false;
         }
     }
@@ -145,8 +161,9 @@ class EncodingIsCorrect extends Check
      */
     private function checkConstants($name, $value)
     {
-        if ($name != $value) {
-            $this->logError('Неверное значение ' . $name . ' в dbconn.php');
+        if (constant($name) != $value) {
+            $valueString = $this->formatValuesAsString($value);
+            $this->logError("В dbconn.php константа $name должна иметь значение $valueString");
             $this->result = false;
         }
     }
@@ -158,17 +175,8 @@ class EncodingIsCorrect extends Check
      */
     public function run()
     {
-        $action = null;
-        switch ($this->encoding) {
-            case 'UTF-8':
-                $action = 'checkUtfSettings';
-                break;
-            case 'CP1251':
-                $action = 'checkCp1251Settings';
-                break;
-        }
+        $this->encoding === 'UTF-8' ? $this->checkUtfSettings() : $this->checkCp1251Settings();
 
-        $this->$action();
         return $this->result;
     }
 
@@ -179,6 +187,27 @@ class EncodingIsCorrect extends Check
      */
     public function name()
     {
-        return 'Параметры настройки кодировки';
+        return 'Проверка параметров зависящих от кодировки сайта...';
+    }
+
+    /**
+     * @param $value
+     * @return string
+     */
+    protected function formatValuesAsString($value)
+    {
+        if ($value === false) {
+            return "false";
+        }
+
+        if ($value === null) {
+            return "null";
+        }
+
+        if ($value === true) {
+            return "true";
+        }
+
+        return (string) $value;
     }
 }

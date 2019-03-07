@@ -22,7 +22,7 @@ class RamCheck extends Check
      *
      * @param int $limit - Минимальный порог для свободного места (в мегабайтах)
      */
-    public function __construct($limit = 500)
+    public function __construct($limit)
     {
         $this->limitMegaBytes = $limit;
         $this->limitKiloBytes = $limit * 1024;
@@ -40,7 +40,7 @@ class RamCheck extends Check
         /** @var resource $systemFile - Файл с информацией о памяти */
         $systemFile = fopen('/proc/meminfo', 'r');
         if (!$systemFile) {
-            $this->skip('Не удалось открыть файл');
+            $this->skip('Не удалось открыть файл /proc/meminfo');
         }
 
         $memory = 0;
@@ -54,7 +54,7 @@ class RamCheck extends Check
         fclose($systemFile);
 
         if ($memory < $this->limitKiloBytes) {
-            $this->logError('На сервере мало свободной оперативной памяти (менее ' . $this->limitMegaBytes . ' мб)');
+            $this->logError('На сервере мало свободной оперативной памяти (' . intval($memory / 1024) . ' < ' . $this->limitMegaBytes . ' мб)');
             $result = false;
         }
 
