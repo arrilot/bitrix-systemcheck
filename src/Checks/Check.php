@@ -4,6 +4,7 @@ namespace Arrilot\BitrixSystemCheck\Checks;
 
 use Arrilot\BitrixSystemCheck\Monitorings\DataStorage;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
+use RuntimeException;
 
 abstract class Check
 {
@@ -146,5 +147,61 @@ abstract class Check
     protected function inConsole()
     {
         return php_sapi_name() === 'cli';
+    }
+
+    /**
+     * Attempt to run $callable $times times with $interval seconds interval until first successful attempt.
+     *
+     * @param callable $callable
+     * @param int $times
+     * @param int $interval - in seconds
+     * @return mixed
+     */
+    protected function attempt(callable $callable, $times, $interval = 1)
+    {
+        $lastError = '';
+        foreach (range(1, $times) as $i) {
+            try {
+                return $callable($i, $times);
+            } catch (RuntimeException $e) {
+                $lastError = $e->getMessage();
+                sleep($interval);
+            }
+        }
+
+        $this->logError($lastError);
+
+        return null;
+    }
+
+    /**
+     * @param string $url
+     * @param null|string $basicAuth
+     * @return null|array
+     */
+    protected function getCurlInfo($url, $basicAuth = null)
+    {
+        return $this->attempt(function () use ($url, $basicAuth) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+            if ($basicAuth) {
+                curl_setopt($ch, CURLOPT_USERPWD, $basicAuth);
+            }
+
+            $result = curl_exec($ch);
+            if (!$result) {
+                $this->logError('При curl запросе к '. $url . ' произошла ошибка ' . curl_error($ch));
+                curl_close($ch);
+                return false;
+            }
+            $info = curl_getinfo($ch);
+            curl_close($ch);
+            return $info;
+        }, 3);
     }
 }
