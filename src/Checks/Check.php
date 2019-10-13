@@ -22,7 +22,7 @@ abstract class Check
      * @return boolean
      */
     abstract public function run();
-    
+
     /**
      * @return string
      */
@@ -42,7 +42,7 @@ abstract class Check
      */
     protected function logError($message)
     {
-        $this->errorMessages[] =  get_class($this) . ': ' . $message;
+        $this->errorMessages[] = get_class($this) . ': ' . $message;
     }
 
     /**
@@ -52,7 +52,7 @@ abstract class Check
      */
     protected function skip($message)
     {
-        throw new SkipCheckException(get_class($this) . ': '. $message);
+        throw new SkipCheckException(get_class($this) . ': ' . $message);
     }
 
     /**
@@ -61,7 +61,7 @@ abstract class Check
      */
     public function checkPhpExtensionsLoaded($extensions)
     {
-        foreach ((array) $extensions as $extension) {
+        foreach ((array)$extensions as $extension) {
             if (!extension_loaded($extension)) {
                 $this->logError('Не подключен модуль php: ' . $extension);
                 return false;
@@ -77,7 +77,7 @@ abstract class Check
      */
     public function checkPhpExtensionsNotLoaded($extensions)
     {
-        foreach ((array) $extensions as $extension) {
+        foreach ((array)$extensions as $extension) {
             if (extension_loaded($extension)) {
                 $this->logError('Подключен нежелательный для данного окружения модуль php: ' . $extension);
                 return false;
@@ -89,6 +89,7 @@ abstract class Check
 
     /**
      * Setter for data storage.
+     *
      * @param DataStorage $dataStorage
      * @return Check
      */
@@ -106,18 +107,18 @@ abstract class Check
      */
     public function getPreviousData()
     {
-        if (! $this->dataStorage) {
+        if (!$this->dataStorage) {
             return [];
         }
 
-        $row = (array) $this->dataStorage->getData(get_class());
+        $row = (array)$this->dataStorage->getData(get_class());
         if (!$row) {
             return [];
         }
 
         $data = json_decode($row['DATA'], true);
         if ($data === null) {
-            $data =  [];
+            $data = [];
         }
 
         if (is_object($row['CREATED_AT'])) {
@@ -129,6 +130,7 @@ abstract class Check
 
     /**
      * Save current check Data to storage.
+     *
      * @param array $data
      * @return $this
      */
@@ -177,7 +179,7 @@ abstract class Check
     /**
      * @param string $url
      * @param null|string $basicAuth
-     * @return null|array
+     * @return bool|null|array
      */
     protected function getCurlInfo($url, $basicAuth = null)
     {
@@ -195,12 +197,13 @@ abstract class Check
 
             $result = curl_exec($ch);
             if (!$result) {
-                $this->logError('При curl запросе к '. $url . ' произошла ошибка ' . curl_error($ch));
+                $this->logError('При curl запросе к ' . $url . ' произошла ошибка ' . curl_error($ch));
                 curl_close($ch);
                 return false;
             }
             $info = curl_getinfo($ch);
             curl_close($ch);
+
             return $info;
         }, 3);
     }
