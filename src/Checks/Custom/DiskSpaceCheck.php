@@ -38,7 +38,7 @@ class DiskSpaceCheck extends Check
         $result = true;
         $freeSpace = disk_free_space('/');
         if ($freeSpace < $this->limitBytes) {
-            $this->logError('На сервере заканчивается свободное место (' . intval($freeSpace / 1024 / 1024) . ' < ' . $this->limitMegaBytes . ' мб)');
+            $this->logError('На сервере заканчивается свободное место (' . intval($freeSpace / 1024 / 1024) . ' &lt; ' . $this->limitMegaBytes . ' мб)');
             $result = false;
         }
 
