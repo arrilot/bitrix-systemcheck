@@ -4,6 +4,7 @@ namespace Arrilot\BitrixSystemCheck\Checks;
 
 use Arrilot\BitrixSystemCheck\Monitorings\DataStorage;
 use Arrilot\BitrixSystemCheck\Exceptions\SkipCheckException;
+use RuntimeException;
 
 abstract class Check
 {
@@ -21,7 +22,7 @@ abstract class Check
      * @return boolean
      */
     abstract public function run();
-    
+
     /**
      * @return string
      */
@@ -41,7 +42,7 @@ abstract class Check
      */
     protected function logError($message)
     {
-        $this->errorMessages[] =  get_class($this) . ': ' . $message;
+        $this->errorMessages[] = get_class($this) . ': ' . $message;
     }
 
     /**
@@ -51,7 +52,7 @@ abstract class Check
      */
     protected function skip($message)
     {
-        throw new SkipCheckException(get_class($this) . ': '. $message);
+        throw new SkipCheckException(get_class($this) . ': ' . $message);
     }
 
     /**
@@ -60,7 +61,7 @@ abstract class Check
      */
     public function checkPhpExtensionsLoaded($extensions)
     {
-        foreach ((array) $extensions as $extension) {
+        foreach ((array)$extensions as $extension) {
             if (!extension_loaded($extension)) {
                 $this->logError('Не подключен модуль php: ' . $extension);
                 return false;
@@ -76,7 +77,7 @@ abstract class Check
      */
     public function checkPhpExtensionsNotLoaded($extensions)
     {
-        foreach ((array) $extensions as $extension) {
+        foreach ((array)$extensions as $extension) {
             if (extension_loaded($extension)) {
                 $this->logError('Подключен нежелательный для данного окружения модуль php: ' . $extension);
                 return false;
@@ -88,6 +89,7 @@ abstract class Check
 
     /**
      * Setter for data storage.
+     *
      * @param DataStorage $dataStorage
      * @return Check
      */
@@ -105,18 +107,18 @@ abstract class Check
      */
     public function getPreviousData()
     {
-        if (! $this->dataStorage) {
+        if (!$this->dataStorage) {
             return [];
         }
 
-        $row = (array) $this->dataStorage->getData(get_class());
+        $row = (array)$this->dataStorage->getData(get_class());
         if (!$row) {
             return [];
         }
 
         $data = json_decode($row['DATA'], true);
         if ($data === null) {
-            $data =  [];
+            $data = [];
         }
 
         if (is_object($row['CREATED_AT'])) {
@@ -128,6 +130,7 @@ abstract class Check
 
     /**
      * Save current check Data to storage.
+     *
      * @param array $data
      * @return $this
      */
@@ -138,5 +141,70 @@ abstract class Check
         }
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function inConsole()
+    {
+        return php_sapi_name() === 'cli';
+    }
+
+    /**
+     * Attempt to run $callable $times times with $interval seconds interval until first successful attempt.
+     *
+     * @param callable $callable
+     * @param int $times
+     * @param int $interval - in seconds
+     * @return mixed
+     */
+    protected function attempt(callable $callable, $times, $interval = 1)
+    {
+        $lastError = '';
+        foreach (range(1, $times) as $i) {
+            try {
+                return $callable($i, $times);
+            } catch (RuntimeException $e) {
+                $lastError = $e->getMessage();
+                sleep($interval);
+            }
+        }
+
+        $this->logError($lastError);
+
+        return null;
+    }
+
+    /**
+     * @param string $url
+     * @param null|string $basicAuth
+     * @return bool|null|array
+     */
+    protected function getCurlInfo($url, $basicAuth = null)
+    {
+        return $this->attempt(function () use ($url, $basicAuth) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 10000);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+            if ($basicAuth) {
+                curl_setopt($ch, CURLOPT_USERPWD, $basicAuth);
+            }
+
+            $result = curl_exec($ch);
+            if (!$result) {
+                $this->logError('При curl запросе к ' . $url . ' произошла ошибка ' . curl_error($ch));
+                curl_close($ch);
+                return false;
+            }
+            $info = curl_getinfo($ch);
+            curl_close($ch);
+
+            return $info;
+        }, 3);
     }
 }

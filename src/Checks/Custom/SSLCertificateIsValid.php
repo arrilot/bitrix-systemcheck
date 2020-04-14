@@ -3,7 +3,6 @@
 namespace Arrilot\BitrixSystemCheck\Checks\Custom;
 
 use Arrilot\BitrixSystemCheck\Checks\Check;
-use Error;
 use Exception;
 
 class SSLCertificateIsValid extends Check
@@ -17,7 +16,7 @@ class SSLCertificateIsValid extends Check
      * @var int
      */
     protected $days;
-    
+
     public function __construct($domain, $days = 7)
     {
         $this->domain = $domain;
@@ -39,7 +38,7 @@ class SSLCertificateIsValid extends Check
     {
         $certificate = $this->downloadCertificate($this->domain);
         if (!$certificate) {
-            $this->logError('Не удалось получить сертификат для '. $this->domain);
+            $this->logError('Не удалось получить сертификат для ' . $this->domain);
             return false;
         }
 
@@ -61,9 +60,10 @@ class SSLCertificateIsValid extends Check
 
         return true;
     }
-    
+
     /**
      * Download ssl certificate for domain.
+     *
      * @param string $domain
      * @return array
      */
@@ -91,18 +91,23 @@ class SSLCertificateIsValid extends Check
                 STREAM_CLIENT_CONNECT,
                 $streamContext
             );
+
+            if ($client === false && $errorNumber == 0) {
+                // Socket initialization problems
+                throw new Exception('The resource (stream_socket_client) has not been created');
+            }
         } catch (Exception $e) {
             $this->logError($e->getMessage());
             return [];
         }
 
         if ($errorNumber && $errorDescription) {
-            $this->logError('stream_socket_client error '. $errorNumber . ': ' . $errorDescription);
+            $this->logError('stream_socket_client error ' . $errorNumber . ': ' . $errorDescription);
         }
 
         $response = stream_context_get_params($client);
         fclose($client);
-        
+
         return !empty($response['options']['ssl']['peer_certificate'])
             ? openssl_x509_parse($response['options']['ssl']['peer_certificate']) : [];
     }

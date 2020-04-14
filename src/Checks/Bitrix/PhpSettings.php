@@ -107,12 +107,4 @@ class PhpSettings extends Check
     {
         return "Корректность необходимых Битриксу настроек php...";
     }
-
-    /**
-     * @return bool
-     */
-    protected function inConsole()
-    {
-        return php_sapi_name() === 'cli';
-    }
 }

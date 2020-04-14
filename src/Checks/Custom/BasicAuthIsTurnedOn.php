@@ -48,7 +48,7 @@ class BasicAuthIsTurnedOn extends Check
             return false;
         }
 
-        $test2 = file_get_contents($page);
+        $test2 = @file_get_contents($page);
         if ($test2 !== false) {
             $this->logError('Страница ' . $page . ' не закрыта базовой авторизацией');
             return false;
